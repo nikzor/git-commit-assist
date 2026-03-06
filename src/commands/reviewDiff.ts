@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import { getStagedDiff } from '../git/diffProvider';
 import { extractLibraryReferences, analyzeDiff } from '../analyzer/reviewEngine';
 import { fetchDocumentationForReferences } from '../context7/client';
-import { ReportPanel } from '../webview/reportPanel';
+import { SidebarProvider } from '../webview/sidebarProvider';
 
-export async function reviewDiffCommand(extensionUri: vscode.Uri): Promise<void> {
+export async function reviewDiffCommand(sidebarProvider: SidebarProvider): Promise<void> {
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders || workspaceFolders.length === 0) {
     vscode.window.showErrorMessage('No workspace folder open.');
@@ -32,7 +32,7 @@ export async function reviewDiffCommand(extensionUri: vscode.Uri): Promise<void>
         const docsContext = await fetchDocumentationForReferences(libraryRefs);
         const report = await analyzeDiff(diff, docsContext);
 
-        ReportPanel.show(report, extensionUri);
+        sidebarProvider.showReport(report);
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         vscode.window.showErrorMessage(`Review failed: ${message}`);

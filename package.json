@@ -19,7 +19,25 @@
         "title": "Review Staged Changes",
         "category": "Git Commit Assist"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "git-commit-assist",
+          "title": "Git Commit Assist",
+          "icon": "resources/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "git-commit-assist": [
+        {
+          "type": "webview",
+          "id": "git-commit-assist.sidebar",
+          "name": "Git Commit Assist"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
