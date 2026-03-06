@@ -1,12 +1,13 @@
 {
   "name": "git-commit-assist",
-  "displayName": "git-commit-assist",
-  "description": "",
+  "displayName": "Git Commit Assist",
+  "description": "Review staged git changes and get code improvement suggestions powered by Context7 documentation",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.109.0"
   },
   "categories": [
+    "Linters",
     "Other"
   ],
   "activationEvents": [],
@@ -14,8 +15,9 @@
   "contributes": {
     "commands": [
       {
-        "command": "git-commit-assist.helloWorld",
-        "title": "Hello World"
+        "command": "git-commit-assist.reviewDiff",
+        "title": "Review Staged Changes",
+        "category": "Git Commit Assist"
       }
     ]
   },
