@@ -41,7 +41,8 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
-    "compile": "tsc -p ./",
+    "compile": "tsc -p ./ && tsc -p tsconfig.webview.json && npm run copy-webview-assets",
+    "copy-webview-assets": "cp src/webview/sidebar.html src/webview/sidebar.css out/webview/",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
