@@ -36,6 +36,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         return;
       }
 
+      if (message.command === 'proceedReview') {
+        const rawDiff = typeof message.rawDiff === 'string' ? message.rawDiff : '';
+        vscode.commands.executeCommand('git-commit-assist.generateOverview', rawDiff);
+        return;
+      }
+
       if (message.command === 'webviewReady') {
         void this.refreshKeyStatus();
       }

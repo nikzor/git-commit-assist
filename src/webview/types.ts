@@ -23,4 +23,5 @@ export interface WebviewMessage {
   command: string;
   configured?: boolean;
   diff?: GitDiffSummary;
+  rawDiff?: string;
 }

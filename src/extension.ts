@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { reviewDiffCommand } from './commands/reviewDiff';
+import { generateOverviewCommand } from './commands/generateOverview';
 import { SidebarProvider } from './webview/sidebarProvider';
 import { SecretStorageService } from './services/secretStorage';
 
@@ -18,6 +19,13 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand(
       'git-commit-assist.reviewDiff',
       () => reviewDiffCommand(sidebarProvider, secretService)
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'git-commit-assist.generateOverview',
+      (rawDiff: string) => generateOverviewCommand(rawDiff, secretService)
     )
   );
 

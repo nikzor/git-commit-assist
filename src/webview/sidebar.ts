@@ -42,6 +42,7 @@ declare function acquireVsCodeApi(): {
     screens.showOverview();
     if (lastDiff) {
       renderer.renderOverview(lastDiff);
+      vscode.postMessage({ command: 'proceedReview', rawDiff: lastDiff.raw });
     }
   });
   (document.getElementById('overviewGoBack') as HTMLElement).addEventListener('click', () => {
