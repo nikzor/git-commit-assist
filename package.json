@@ -64,6 +64,7 @@
     "typescript-eslint": "^8.56.1"
   },
   "dependencies": {
-    "@google/genai": "^1.44.0"
+    "@google/genai": "^1.44.0",
+    "marked": "^17.0.4"
   }
 }

@@ -236,6 +236,54 @@ body {
   margin-bottom: 0;
 }
 
+.overview-markdown {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vscode-foreground);
+  word-break: break-word;
+}
+
+.overview-markdown h1,
+.overview-markdown h2,
+.overview-markdown h3 {
+  margin: 10px 0 6px;
+  font-weight: 600;
+}
+
+.overview-markdown h1 {
+  font-size: 16px;
+}
+
+.overview-markdown h2 {
+  font-size: 14px;
+}
+
+.overview-markdown h3 {
+  font-size: 13px;
+}
+
+.overview-markdown p,
+.overview-markdown ul {
+  margin: 6px 0;
+}
+
+.overview-markdown ul {
+  padding-left: 18px;
+}
+
+.overview-markdown code {
+  font-family: var(--vscode-editor-font-family);
+}
+
+.overview-markdown pre {
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid var(--vscode-widget-border);
+  border-radius: 4px;
+  overflow: auto;
+  background: var(--vscode-editor-background);
+}
+
 .expandable-section {
   margin: 0 0 16px;
 }
@@ -267,6 +315,11 @@ button:hover {
 button:focus {
   outline: 1px solid var(--vscode-focusBorder);
   outline-offset: 1px;
+}
+
+button.is-loading {
+  opacity: 0.9;
+  cursor: progress;
 }
 
 .secondary-button {

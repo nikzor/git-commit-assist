@@ -6,19 +6,19 @@ import { SecretStorageService } from '../services/secretStorage';
 export async function generateOverviewCommand(
   rawDiff: string,
   secretService: SecretStorageService
-): Promise<void> {
+): Promise<{ markdown: string; html: string } | undefined> {
   if (!rawDiff.trim()) {
     vscode.window.showErrorMessage('Git Commit Assist: empty diff, cannot generate AI overview.');
-    return;
+    return undefined;
   }
 
   const apiKey = await secretService.requireApiKey();
   if (!apiKey) {
     vscode.window.showErrorMessage('Git Commit Assist: API key is required to generate AI overview.');
-    return;
+    return undefined;
   }
 
-  await vscode.window.withProgress(
+  return vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
       title: 'Generating AI overview...',
@@ -26,16 +26,23 @@ export async function generateOverviewCommand(
     },
     async () => {
       try {
+        const { marked } = await import('marked');
         const prompt = buildDiffOverviewPrompt(rawDiff);
         const geminiRepository = new GeminiRepository(apiKey);
         const overview = await geminiRepository.sendMessage(prompt);
+        const overviewHtml = marked.parse(overview, { async: false }) as string;
 
         // Output to extension host console for the current milestone.
         console.log('[Git Commit Assist] AI Overview Result:');
         console.log(overview);
+        return {
+          markdown: overview,
+          html: overviewHtml,
+        };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         vscode.window.showErrorMessage(`AI overview failed: ${message}`);
+        return undefined;
       }
     }
   );

@@ -38,7 +38,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
       if (message.command === 'proceedReview') {
         const rawDiff = typeof message.rawDiff === 'string' ? message.rawDiff : '';
-        vscode.commands.executeCommand('git-commit-assist.generateOverview', rawDiff);
+        void this.handleProceedReview(rawDiff);
         return;
       }
 
@@ -83,6 +83,38 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   public updateKeyStatus(configured: boolean): void {
     if (this.view) {
       this.view.webview.postMessage({ command: 'keyStatus', configured });
+    }
+  }
+
+  private async handleProceedReview(rawDiff: string): Promise<void> {
+    if (!this.view) {
+      return;
+    }
+
+    try {
+      const overview = await vscode.commands.executeCommand<{ markdown: string; html: string } | undefined>(
+        'git-commit-assist.generateOverview',
+        rawDiff
+      );
+
+      if (!this.view) {
+        return;
+      }
+
+      if (overview) {
+        this.view.webview.postMessage({
+          command: 'overviewResult',
+          overviewMarkdown: overview.markdown,
+          overviewHtml: overview.html,
+        });
+        return;
+      }
+
+      this.view.webview.postMessage({ command: 'overviewFailed' });
+    } catch {
+      if (this.view) {
+        this.view.webview.postMessage({ command: 'overviewFailed' });
+      }
     }
   }
 
