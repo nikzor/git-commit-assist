@@ -236,6 +236,24 @@ body {
   margin-bottom: 0;
 }
 
+.context7-status {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 8px;
+}
+
+.context7-sources {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.context7-sources li {
+  margin: 2px 0;
+}
+
 .overview-markdown {
   font-size: 12px;
   line-height: 1.5;

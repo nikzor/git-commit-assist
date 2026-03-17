@@ -1,11 +1,38 @@
-export function buildDiffOverviewPrompt(gitDiff: string): string {
+import { DocumentationContext } from '../../models/types';
+
+function buildDocsContextBlock(docsContext: DocumentationContext[]): string {
+  if (docsContext.length === 0) {
+    return 'Контекст документации Context7 не найден или недоступен.';
+  }
+
+  return docsContext
+    .slice(0, 3)
+    .map((doc, index) => {
+      const shortContent = doc.content.slice(0, 2500);
+      return [
+        `### Документация ${index + 1}`,
+        `Библиотека: ${doc.libraryName}`,
+        `ID: ${doc.libraryId}`,
+        '```text',
+        shortContent,
+        '```',
+      ].join('\n');
+    })
+    .join('\n\n');
+}
+
+export function buildDiffOverviewPrompt(gitDiff: string, docsContext: DocumentationContext[] = []): string {
+  const docsBlock = buildDocsContextBlock(docsContext);
+
   return `Ты — опытный code reviewer.
 Твоя задача: проанализировать git diff и дать краткий, практический обзор изменений.
 
 Входные данные:
 - Ниже передан git diff (staged changes).
+- Дополнительно может быть передан контекст актуальной документации из Context7.
 - Анализируй только то, что реально видно в diff.
 - Не придумывай факты и не делай предположений без оснований в изменениях.
+- Если есть контекст Context7, учитывай его как источник актуальных API и best practices.
 
 Требования к ответу:
 1) Ответ должен быть на русском языке.
@@ -24,5 +51,8 @@ Git diff для анализа:
 \`\`\`diff
 ${gitDiff}
 \`\`\`
+
+Контекст Context7:
+${docsBlock}
 `;
 }
