@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-const API_KEY_SECRET = 'git-commit-assist.openaiApiKey';
+const API_KEY_SECRET = 'git-commit-assist.apiKey';
 
 export class SecretStorageService {
   constructor(private readonly secrets: vscode.SecretStorage) {}
@@ -24,10 +24,10 @@ export class SecretStorageService {
     }
 
     const key = await vscode.window.showInputBox({
-      title: 'OpenAI API Key',
-      prompt: 'Enter your OpenAI API key to enable code review',
+      title: 'API Key',
+      prompt: 'Enter your ProxyAPI key for Gemini to enable code review',
       password: true,
-      placeHolder: 'sk-...',
+      placeHolder: 'Enter API key...',
       ignoreFocusOut: true,
       validateInput: (value) => {
         if (!value.trim()) {
