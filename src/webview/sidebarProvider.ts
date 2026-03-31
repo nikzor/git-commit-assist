@@ -2,13 +2,17 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ReviewReport } from '../models/types';
+import { SecretStorageService } from '../services/secretStorage';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
   public static readonly viewId = 'git-commit-assist.sidebar';
 
   private view?: vscode.WebviewView;
 
-  constructor(private readonly extensionUri: vscode.Uri) {}
+  constructor(
+    private readonly extensionUri: vscode.Uri,
+    private readonly secretService: SecretStorageService
+  ) {}
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -35,6 +39,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     webviewView.onDidDispose(() => {
       this.view = undefined;
     });
+
+    this.refreshKeyStatus();
   }
 
   public showReport(report: ReviewReport): void {
@@ -42,6 +48,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       this.view.webview.postMessage({ command: 'showReport', report });
       this.view.show?.(true);
     }
+  }
+
+  public updateKeyStatus(configured: boolean): void {
+    if (this.view) {
+      this.view.webview.postMessage({ command: 'keyStatus', configured });
+    }
+  }
+
+  private async refreshKeyStatus(): Promise<void> {
+    const key = await this.secretService.getApiKey();
+    this.updateKeyStatus(!!key);
   }
 
   private getHtml(webview: vscode.Webview): string {

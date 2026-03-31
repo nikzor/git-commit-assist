@@ -18,6 +18,11 @@
         "command": "git-commit-assist.reviewDiff",
         "title": "Review Staged Changes",
         "category": "Git Commit Assist"
+      },
+      {
+        "command": "git-commit-assist.removeApiKey",
+        "title": "Remove Saved API Key",
+        "category": "Git Commit Assist"
       }
     ],
     "viewsContainers": {

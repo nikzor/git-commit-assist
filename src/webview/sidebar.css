@@ -91,6 +91,14 @@ body {
   font-weight: 600;
 }
 
+.status-ok {
+  color: var(--vscode-testing-iconPassed, #73c991);
+}
+
+.status-missing {
+  color: var(--vscode-testing-iconFailed, #f48771);
+}
+
 button {
   width: 100%;
   padding: 8px 16px;

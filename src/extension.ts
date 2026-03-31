@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
 import { reviewDiffCommand } from './commands/reviewDiff';
 import { SidebarProvider } from './webview/sidebarProvider';
+import { SecretStorageService } from './services/secretStorage';
 
 export function activate(context: vscode.ExtensionContext) {
-  const sidebarProvider = new SidebarProvider(context.extensionUri);
+  const secretService = new SecretStorageService(context.secrets);
+  const sidebarProvider = new SidebarProvider(context.extensionUri, secretService);
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(
@@ -15,7 +17,18 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand(
       'git-commit-assist.reviewDiff',
-      () => reviewDiffCommand(sidebarProvider)
+      () => reviewDiffCommand(sidebarProvider, secretService)
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'git-commit-assist.removeApiKey',
+      async () => {
+        await secretService.deleteApiKey();
+        sidebarProvider.updateKeyStatus(false);
+        vscode.window.showInformationMessage('Git Commit Assist: API key removed.');
+      }
     )
   );
 }
