@@ -3,8 +3,19 @@ import { getStagedDiff } from '../git/diffProvider';
 import { extractLibraryReferences, analyzeDiff } from '../analyzer/reviewEngine';
 import { fetchDocumentationForReferences } from '../context7/client';
 import { SidebarProvider } from '../webview/sidebarProvider';
+import { SecretStorageService } from '../services/secretStorage';
 
-export async function reviewDiffCommand(sidebarProvider: SidebarProvider): Promise<void> {
+export async function reviewDiffCommand(
+  sidebarProvider: SidebarProvider,
+  secretService: SecretStorageService
+): Promise<void> {
+  const apiKey = await secretService.requireApiKey();
+  if (!apiKey) {
+    return;
+  }
+
+  sidebarProvider.updateKeyStatus(true);
+
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders || workspaceFolders.length === 0) {
     vscode.window.showErrorMessage('No workspace folder open.');

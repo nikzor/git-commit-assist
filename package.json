@@ -18,6 +18,11 @@
         "command": "git-commit-assist.reviewDiff",
         "title": "Review Staged Changes",
         "category": "Git Commit Assist"
+      },
+      {
+        "command": "git-commit-assist.removeApiKey",
+        "title": "Remove Saved API Key",
+        "category": "Git Commit Assist"
       }
     ],
     "viewsContainers": {
@@ -49,13 +54,16 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.109.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
-    "typescript-eslint": "^8.56.1",
+    "@types/vscode": "^1.109.0",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.3",
     "typescript": "^5.9.3",
-    "@vscode/test-cli": "^0.0.12",
-    "@vscode/test-electron": "^2.5.2"
+    "typescript-eslint": "^8.56.1"
+  },
+  "dependencies": {
+    "@google/genai": "^1.44.0"
   }
 }
