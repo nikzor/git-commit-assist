@@ -1,13 +1,23 @@
 import * as vscode from 'vscode';
 import { reviewDiffCommand } from './commands/reviewDiff';
+import { SidebarProvider } from './webview/sidebarProvider';
 
 export function activate(context: vscode.ExtensionContext) {
-  const disposable = vscode.commands.registerCommand(
-    'git-commit-assist.reviewDiff',
-    () => reviewDiffCommand(context.extensionUri)
+  const sidebarProvider = new SidebarProvider(context.extensionUri);
+
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      SidebarProvider.viewId,
+      sidebarProvider
+    )
   );
 
-  context.subscriptions.push(disposable);
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      'git-commit-assist.reviewDiff',
+      () => reviewDiffCommand(sidebarProvider)
+    )
+  );
 }
 
 export function deactivate() {}

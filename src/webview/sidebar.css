@@ -1,0 +1,114 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--vscode-font-family);
+  font-size: var(--vscode-font-size);
+  color: var(--vscode-foreground);
+  padding: 16px 12px;
+}
+
+.header {
+  margin-bottom: 16px;
+}
+
+.header h2 {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--vscode-foreground);
+  margin-bottom: 8px;
+}
+
+.description {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 20px;
+}
+
+.info-section {
+  margin-bottom: 20px;
+}
+
+.info-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.info-item .label {
+  color: var(--vscode-descriptionForeground);
+  min-width: 60px;
+  flex-shrink: 0;
+}
+
+.info-item .value {
+  color: var(--vscode-foreground);
+}
+
+.divider {
+  height: 1px;
+  background: var(--vscode-widget-border);
+  margin: 16px 0;
+}
+
+.section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 12px;
+}
+
+.steps {
+  list-style: none;
+  margin-bottom: 20px;
+}
+
+.steps li {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vscode-descriptionForeground);
+  padding: 3px 0;
+  padding-left: 16px;
+  position: relative;
+}
+
+.steps li::before {
+  content: attr(data-step);
+  position: absolute;
+  left: 0;
+  color: var(--vscode-textLink-foreground);
+  font-weight: 600;
+}
+
+button {
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 2px;
+  font-family: var(--vscode-font-family);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+button:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+button:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
