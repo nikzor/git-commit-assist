@@ -61,6 +61,8 @@ interface WebviewMessage {
     showHomeScreen();
   });
 
+  vscode.postMessage({ command: 'webviewReady' });
+
   function clearNode(node: HTMLElement): void {
     while (node.firstChild) {
       node.removeChild(node.firstChild);
