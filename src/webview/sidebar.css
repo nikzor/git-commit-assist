@@ -11,6 +11,10 @@ body {
   padding: 16px 12px;
 }
 
+.hidden {
+  display: none;
+}
+
 .header {
   margin-bottom: 16px;
 }
@@ -99,6 +103,29 @@ body {
   color: var(--vscode-testing-iconFailed, #f48771);
 }
 
+.diff-summary {
+  border: 1px solid var(--vscode-widget-border);
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 20px;
+}
+
+.diff-summary p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 6px;
+}
+
+.diff-summary p:last-child {
+  margin-bottom: 0;
+}
+
+.diff-summary code {
+  color: var(--vscode-textPreformat-foreground, var(--vscode-textLink-foreground));
+  font-family: var(--vscode-editor-font-family);
+}
+
 button {
   width: 100%;
   padding: 8px 16px;
@@ -119,4 +146,13 @@ button:hover {
 button:focus {
   outline: 1px solid var(--vscode-focusBorder);
   outline-offset: 1px;
+}
+
+.secondary-button {
+  background: var(--vscode-button-secondaryBackground, transparent);
+  color: var(--vscode-button-secondaryForeground, var(--vscode-foreground));
+}
+
+.secondary-button:hover {
+  background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
 }

@@ -63,6 +63,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   private getHtml(webview: vscode.Webview): string {
     const webviewDir = path.join(this.extensionUri.fsPath, 'out', 'webview');
+    const screenDir = path.join(webviewDir, 'screens');
 
     const cssUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'out', 'webview', 'sidebar.css')
@@ -72,10 +73,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     );
 
     let html = fs.readFileSync(path.join(webviewDir, 'sidebar.html'), 'utf-8');
+    const homeScreen = fs.readFileSync(path.join(screenDir, 'home.html'), 'utf-8');
+    const diffScreen = fs.readFileSync(path.join(screenDir, 'diff.html'), 'utf-8');
 
     html = html.replace(/\{\{cssUri\}\}/g, cssUri.toString());
     html = html.replace(/\{\{scriptUri\}\}/g, scriptUri.toString());
     html = html.replace(/\{\{cspSource\}\}/g, webview.cspSource);
+    html = html.replace(/\{\{homeScreen\}\}/g, homeScreen);
+    html = html.replace(/\{\{diffScreen\}\}/g, diffScreen);
 
     return html;
   }

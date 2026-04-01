@@ -7,9 +7,26 @@ declare function acquireVsCodeApi(): {
 (function () {
   const vscode = acquireVsCodeApi();
   const keyStatusEl = document.getElementById('keyStatus')!;
+  const homeScreenEl = document.getElementById('homeScreen')!;
+  const diffScreenEl = document.getElementById('diffScreen')!;
+
+  function showHomeScreen(): void {
+    homeScreenEl.classList.remove('hidden');
+    diffScreenEl.classList.add('hidden');
+  }
+
+  function showDiffScreen(): void {
+    homeScreenEl.classList.add('hidden');
+    diffScreenEl.classList.remove('hidden');
+  }
 
   document.getElementById('startReview')!.addEventListener('click', () => {
+    showDiffScreen();
     vscode.postMessage({ command: 'startReview' });
+  });
+
+  document.getElementById('cancelReview')!.addEventListener('click', () => {
+    showHomeScreen();
   });
 
   function setKeyStatus(configured: boolean): void {
