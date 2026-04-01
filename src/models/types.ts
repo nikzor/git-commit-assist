@@ -16,6 +16,14 @@ export interface StagedDiff {
   raw: string;
 }
 
+export interface GitDiffSummary {
+  raw: string;
+  filesCount: number;
+  addedLines: number;
+  removedLines: number;
+  files: DiffFile[];
+}
+
 export interface LibraryReference {
   name: string;
   importStatement: string;

@@ -126,6 +126,87 @@ body {
   font-family: var(--vscode-editor-font-family);
 }
 
+.diff-files-list {
+  margin: 0 0 16px;
+  max-height: 340px;
+  overflow: auto;
+}
+
+.empty-diff {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vscode-descriptionForeground);
+}
+
+.diff-file-card {
+  border: 1px solid var(--vscode-widget-border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.diff-file-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--vscode-sideBarSectionHeader-background, var(--vscode-editor-background));
+  border-bottom: 1px solid var(--vscode-widget-border);
+}
+
+.diff-file-path {
+  font-size: 11px;
+  font-family: var(--vscode-editor-font-family);
+  color: var(--vscode-foreground);
+  word-break: break-all;
+}
+
+.diff-file-stats {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.diff-file-lines {
+  background: var(--vscode-editor-background);
+}
+
+.diff-hunk-header {
+  font-size: 10px;
+  font-family: var(--vscode-editor-font-family);
+  color: var(--vscode-descriptionForeground);
+  padding: 6px 10px;
+  border-top: 1px solid var(--vscode-widget-border);
+}
+
+.diff-line {
+  font-size: 11px;
+  line-height: 1.35;
+  font-family: var(--vscode-editor-font-family);
+  padding: 2px 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.diff-line-add {
+  background: color-mix(in srgb, var(--vscode-testing-iconPassed, #73c991) 16%, transparent);
+  color: var(--vscode-editor-foreground);
+}
+
+.diff-line-remove {
+  background: color-mix(in srgb, var(--vscode-testing-iconFailed, #f48771) 16%, transparent);
+  color: var(--vscode-editor-foreground);
+}
+
+.diff-line-context {
+  color: var(--vscode-descriptionForeground);
+}
+
+.diff-truncated {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
 button {
   width: 100%;
   padding: 8px 16px;

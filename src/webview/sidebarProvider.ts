@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ReviewReport } from '../models/types';
+import { GitDiffSummary, ReviewReport, StagedDiff } from '../models/types';
 import { SecretStorageService } from '../services/secretStorage';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
@@ -46,6 +46,27 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   public showReport(report: ReviewReport): void {
     if (this.view) {
       this.view.webview.postMessage({ command: 'showReport', report });
+      this.view.show?.(true);
+    }
+  }
+
+  public showDiff(diff: StagedDiff): void {
+    const summary: GitDiffSummary = {
+      raw: diff.raw,
+      filesCount: diff.files.length,
+      addedLines: diff.files.reduce(
+        (acc, file) => acc + file.hunks.reduce((hAcc, hunk) => hAcc + hunk.addedLines.length, 0),
+        0
+      ),
+      removedLines: diff.files.reduce(
+        (acc, file) => acc + file.hunks.reduce((hAcc, hunk) => hAcc + hunk.removedLines.length, 0),
+        0
+      ),
+      files: diff.files,
+    };
+
+    if (this.view) {
+      this.view.webview.postMessage({ command: 'showDiff', diff: summary });
       this.view.show?.(true);
     }
   }
