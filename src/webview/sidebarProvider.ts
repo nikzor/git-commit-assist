@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ReviewReport } from '../models/types';
+import { GitDiffSummary, ReviewReport, StagedDiff } from '../models/types';
 import { SecretStorageService } from '../services/secretStorage';
 
 export class SidebarProvider implements vscode.WebviewViewProvider {
@@ -33,19 +33,43 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     webviewView.webview.onDidReceiveMessage((message) => {
       if (message.command === 'startReview') {
         vscode.commands.executeCommand('git-commit-assist.reviewDiff');
+        return;
+      }
+
+      if (message.command === 'webviewReady') {
+        void this.refreshKeyStatus();
       }
     });
 
     webviewView.onDidDispose(() => {
       this.view = undefined;
     });
-
-    this.refreshKeyStatus();
   }
 
   public showReport(report: ReviewReport): void {
     if (this.view) {
       this.view.webview.postMessage({ command: 'showReport', report });
+      this.view.show?.(true);
+    }
+  }
+
+  public showDiff(diff: StagedDiff): void {
+    const summary: GitDiffSummary = {
+      raw: diff.raw,
+      filesCount: diff.files.length,
+      addedLines: diff.files.reduce(
+        (acc, file) => acc + file.hunks.reduce((hAcc, hunk) => hAcc + hunk.addedLines.length, 0),
+        0
+      ),
+      removedLines: diff.files.reduce(
+        (acc, file) => acc + file.hunks.reduce((hAcc, hunk) => hAcc + hunk.removedLines.length, 0),
+        0
+      ),
+      files: diff.files,
+    };
+
+    if (this.view) {
+      this.view.webview.postMessage({ command: 'showDiff', diff: summary });
       this.view.show?.(true);
     }
   }
@@ -63,6 +87,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   private getHtml(webview: vscode.Webview): string {
     const webviewDir = path.join(this.extensionUri.fsPath, 'out', 'webview');
+    const screenDir = path.join(webviewDir, 'screens');
 
     const cssUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, 'out', 'webview', 'sidebar.css')
@@ -72,10 +97,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     );
 
     let html = fs.readFileSync(path.join(webviewDir, 'sidebar.html'), 'utf-8');
+    const homeScreen = fs.readFileSync(path.join(screenDir, 'home.html'), 'utf-8');
+    const diffScreen = fs.readFileSync(path.join(screenDir, 'diff.html'), 'utf-8');
 
     html = html.replace(/\{\{cssUri\}\}/g, cssUri.toString());
     html = html.replace(/\{\{scriptUri\}\}/g, scriptUri.toString());
     html = html.replace(/\{\{cspSource\}\}/g, webview.cspSource);
+    html = html.replace(/\{\{homeScreen\}\}/g, homeScreen);
+    html = html.replace(/\{\{diffScreen\}\}/g, diffScreen);
 
     return html;
   }
