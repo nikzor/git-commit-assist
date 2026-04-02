@@ -32,7 +32,6 @@ declare function acquireVsCodeApi(): {
   let lastDiff: GitDiffSummary | null = null;
 
   (document.getElementById('startReview') as HTMLElement).addEventListener('click', () => {
-    screens.showDiff();
     vscode.postMessage({ command: 'startReview' });
   });
 
@@ -66,6 +65,7 @@ declare function acquireVsCodeApi(): {
         if (message.diff) {
           lastDiff = message.diff;
           renderer.renderDiff(message.diff);
+          screens.showDiff();
         }
         break;
       case 'showReport':
