@@ -99,12 +99,14 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     let html = fs.readFileSync(path.join(webviewDir, 'sidebar.html'), 'utf-8');
     const homeScreen = fs.readFileSync(path.join(screenDir, 'home.html'), 'utf-8');
     const diffScreen = fs.readFileSync(path.join(screenDir, 'diff.html'), 'utf-8');
+    const overviewScreen = fs.readFileSync(path.join(screenDir, 'overview.html'), 'utf-8');
 
     html = html.replace(/\{\{cssUri\}\}/g, cssUri.toString());
     html = html.replace(/\{\{scriptUri\}\}/g, scriptUri.toString());
     html = html.replace(/\{\{cspSource\}\}/g, webview.cspSource);
     html = html.replace(/\{\{homeScreen\}\}/g, homeScreen);
     html = html.replace(/\{\{diffScreen\}\}/g, diffScreen);
+    html = html.replace(/\{\{overviewScreen\}\}/g, overviewScreen);
 
     return html;
   }

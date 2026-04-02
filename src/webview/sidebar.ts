@@ -36,20 +36,33 @@ interface WebviewMessage {
   const keyStatusEl = document.getElementById('keyStatus')!;
   const homeScreenEl = document.getElementById('homeScreen')!;
   const diffScreenEl = document.getElementById('diffScreen')!;
+  const overviewScreenEl = document.getElementById('overviewScreen')!;
   const diffMetaEl = document.getElementById('diffMeta')!;
   const diffStatsEl = document.getElementById('diffStats')!;
   const diffFilesListEl = document.getElementById('diffFilesList')!;
+  const overviewDiffMetaEl = document.getElementById('overviewDiffMeta')!;
+  const overviewDiffStatsEl = document.getElementById('overviewDiffStats')!;
+  const overviewDiffFilesListEl = document.getElementById('overviewDiffFilesList')!;
   const maxFilesToRender = 10;
   const maxLinesPerFile = 80;
+  let lastDiff: GitDiffSummary | null = null;
 
   function showHomeScreen(): void {
     homeScreenEl.classList.remove('hidden');
     diffScreenEl.classList.add('hidden');
+    overviewScreenEl.classList.add('hidden');
   }
 
   function showDiffScreen(): void {
     homeScreenEl.classList.add('hidden');
     diffScreenEl.classList.remove('hidden');
+    overviewScreenEl.classList.add('hidden');
+  }
+
+  function showOverviewScreen(): void {
+    homeScreenEl.classList.add('hidden');
+    diffScreenEl.classList.add('hidden');
+    overviewScreenEl.classList.remove('hidden');
   }
 
   document.getElementById('startReview')!.addEventListener('click', () => {
@@ -59,6 +72,15 @@ interface WebviewMessage {
 
   document.getElementById('cancelReview')!.addEventListener('click', () => {
     showHomeScreen();
+  });
+  document.getElementById('proceedReview')!.addEventListener('click', () => {
+    showOverviewScreen();
+    if (lastDiff) {
+      renderOverview(lastDiff);
+    }
+  });
+  document.getElementById('overviewGoBack')!.addEventListener('click', () => {
+    showDiffScreen();
   });
 
   vscode.postMessage({ command: 'webviewReady' });
@@ -88,14 +110,14 @@ interface WebviewMessage {
     );
   }
 
-  function renderFiles(diff: GitDiffSummary): void {
-    clearNode(diffFilesListEl);
+  function renderFiles(targetEl: HTMLElement, diff: GitDiffSummary): void {
+    clearNode(targetEl);
 
     if (diff.files.length === 0) {
       const emptyEl = document.createElement('p');
       emptyEl.className = 'empty-diff';
       emptyEl.textContent = 'No staged diff loaded.';
-      diffFilesListEl.appendChild(emptyEl);
+      targetEl.appendChild(emptyEl);
       return;
     }
 
@@ -167,24 +189,30 @@ interface WebviewMessage {
 
       fileCardEl.appendChild(headerEl);
       fileCardEl.appendChild(linesEl);
-      diffFilesListEl.appendChild(fileCardEl);
+      targetEl.appendChild(fileCardEl);
     }
 
     if (diff.files.length > filesToRender.length) {
       const truncatedFilesEl = document.createElement('p');
       truncatedFilesEl.className = 'empty-diff';
       truncatedFilesEl.textContent = `Showing ${filesToRender.length} of ${diff.files.length} files.`;
-      diffFilesListEl.appendChild(truncatedFilesEl);
+      targetEl.appendChild(truncatedFilesEl);
     }
   }
 
   function renderDiff(diff: GitDiffSummary): void {
+    lastDiff = diff;
     diffMetaEl.textContent = diff.filesCount === 0
       ? 'No staged changes found.'
       : 'Staged changes loaded from your workspace.';
 
     diffStatsEl.textContent = `Files: ${diff.filesCount} | +${diff.addedLines} | -${diff.removedLines}`;
-    renderFiles(diff);
+    renderFiles(diffFilesListEl, diff);
+  }
+
+  function renderOverview(diff: GitDiffSummary): void {
+    overviewDiffStatsEl.textContent = `Files: ${diff.filesCount} | +${diff.addedLines} | -${diff.removedLines}`;
+    renderFiles(overviewDiffFilesListEl, diff);
   }
 
   function setKeyStatus(configured: boolean): void {

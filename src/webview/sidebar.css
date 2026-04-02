@@ -207,6 +207,35 @@ body {
   color: var(--vscode-descriptionForeground);
 }
 
+.action-row {
+  display: flex;
+  gap: 8px;
+}
+
+.action-row button {
+  flex: 1;
+  width: auto;
+}
+
+.ai-overview-card {
+  border: 1px solid var(--vscode-widget-border);
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 16px;
+  background: var(--vscode-editor-background);
+}
+
+.ai-overview-card p {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 6px;
+}
+
+.ai-overview-card p:last-child {
+  margin-bottom: 0;
+}
+
 button {
   width: 100%;
   padding: 8px 16px;
