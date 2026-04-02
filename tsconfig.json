@@ -12,6 +12,9 @@
 		"skipLibCheck": true
 	},
 	"exclude": [
-		"src/webview/sidebar.ts"
+		"src/webview/sidebar.ts",
+		"src/webview/diffRenderer.ts",
+		"src/webview/screenManager.ts",
+		"src/webview/types.ts"
 	]
 }
