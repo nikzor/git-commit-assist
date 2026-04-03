@@ -1,0 +1,29 @@
+<div id="overviewScreen" class="hidden">
+  <div class="header">
+    <h2>AI Overview</h2>
+  </div>
+  <p class="description">
+    Quick AI summary based on the loaded staged changes.
+  </p>
+
+  <div class="ai-overview-card">
+    <div class="section-title">Stub Overview</div>
+    <p>- Main focus area: input validation and error handling.</p>
+    <p>- Potential risk level: medium (needs manual review).</p>
+    <p>- Suggested next step: inspect changed files before commit.</p>
+  </div>
+
+  <div class="diff-summary">
+    <div class="section-title">Git Diff</div>
+    <p id="overviewDiffStats">Files: 0 | +0 | -0</p>
+  </div>
+
+  <details class="expandable-section">
+    <summary>Show Git Diff</summary>
+    <div id="overviewDiffFilesList" class="diff-files-list">
+      <p class="empty-diff">No staged diff loaded.</p>
+    </div>
+  </details>
+
+  <button id="overviewGoBack" class="secondary-button">Go Back</button>
+</div>

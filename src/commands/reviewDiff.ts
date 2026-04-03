@@ -5,8 +5,17 @@ import { SecretStorageService } from '../services/secretStorage';
 
 export async function reviewDiffCommand(
   sidebarProvider: SidebarProvider,
-  _secretService: SecretStorageService
+  secretService: SecretStorageService
 ): Promise<void> {
+  const apiKey = await secretService.requireApiKey();
+  if (!apiKey) {
+    sidebarProvider.updateKeyStatus(false);
+    vscode.window.showErrorMessage('Git Commit Assist: API key is required to start review.');
+    return;
+  }
+
+  sidebarProvider.updateKeyStatus(true);
+
   const workspaceFolders = vscode.workspace.workspaceFolders;
   if (!workspaceFolders || workspaceFolders.length === 0) {
     vscode.window.showErrorMessage('No workspace folder open.');
