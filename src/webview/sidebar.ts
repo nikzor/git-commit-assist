@@ -17,8 +17,10 @@ declare function acquireVsCodeApi(): {
   const diffMetaEl = document.getElementById('diffMeta') as HTMLElement;
   const diffStatsEl = document.getElementById('diffStats') as HTMLElement;
   const diffFilesListEl = document.getElementById('diffFilesList') as HTMLElement;
+  const proceedButtonEl = document.getElementById('proceedReview') as HTMLButtonElement;
   const overviewDiffStatsEl = document.getElementById('overviewDiffStats') as HTMLElement;
   const overviewDiffFilesListEl = document.getElementById('overviewDiffFilesList') as HTMLElement;
+  const overviewMarkdownEl = document.getElementById('overviewMarkdown') as HTMLElement;
 
   const screens = createScreenManager(homeScreenEl, diffScreenEl, overviewScreenEl);
   const renderer = createDiffRenderer({
@@ -39,9 +41,9 @@ declare function acquireVsCodeApi(): {
     screens.showHome();
   });
   (document.getElementById('proceedReview') as HTMLElement).addEventListener('click', () => {
-    screens.showOverview();
     if (lastDiff) {
-      renderer.renderOverview(lastDiff);
+      setProceedLoading(true);
+      vscode.postMessage({ command: 'proceedReview', rawDiff: lastDiff.raw });
     }
   });
   (document.getElementById('overviewGoBack') as HTMLElement).addEventListener('click', () => {
@@ -53,6 +55,12 @@ declare function acquireVsCodeApi(): {
   function setKeyStatus(configured: boolean): void {
     keyStatusEl.textContent = configured ? 'Configured' : 'Not set';
     keyStatusEl.className = configured ? 'value status-ok' : 'value status-missing';
+  }
+
+  function setProceedLoading(isLoading: boolean): void {
+    proceedButtonEl.disabled = isLoading;
+    proceedButtonEl.classList.toggle('is-loading', isLoading);
+    proceedButtonEl.textContent = isLoading ? 'Generating...' : 'Proceed';
   }
 
   window.addEventListener('message', (event: MessageEvent) => {
@@ -70,6 +78,21 @@ declare function acquireVsCodeApi(): {
         break;
       case 'showReport':
         // TODO: render report in the sidebar
+        break;
+      case 'overviewResult':
+        setProceedLoading(false);
+        if (message.overviewHtml) {
+          overviewMarkdownEl.innerHTML = message.overviewHtml;
+        } else if (message.overviewMarkdown) {
+          overviewMarkdownEl.textContent = message.overviewMarkdown;
+        }
+        if (lastDiff) {
+          renderer.renderOverview(lastDiff);
+        }
+        screens.showOverview();
+        break;
+      case 'overviewFailed':
+        setProceedLoading(false);
         break;
     }
   });
