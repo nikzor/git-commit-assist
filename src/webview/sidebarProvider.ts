@@ -92,7 +92,13 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
 
     try {
-      const overview = await vscode.commands.executeCommand<{ markdown: string; html: string } | undefined>(
+      const overview = await vscode.commands.executeCommand<{
+        markdown: string;
+        html: string;
+        context7Used: boolean;
+        context7Sources: string[];
+        context7Message: string;
+      } | undefined>(
         'git-commit-assist.generateOverview',
         rawDiff
       );
@@ -106,6 +112,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
           command: 'overviewResult',
           overviewMarkdown: overview.markdown,
           overviewHtml: overview.html,
+          context7Used: overview.context7Used,
+          context7Sources: overview.context7Sources,
+          context7Message: overview.context7Message,
         });
         return;
       }
