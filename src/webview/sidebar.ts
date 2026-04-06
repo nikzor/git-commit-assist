@@ -21,6 +21,8 @@ declare function acquireVsCodeApi(): {
   const overviewDiffStatsEl = document.getElementById('overviewDiffStats') as HTMLElement;
   const overviewDiffFilesListEl = document.getElementById('overviewDiffFilesList') as HTMLElement;
   const overviewMarkdownEl = document.getElementById('overviewMarkdown') as HTMLElement;
+  const context7StatusEl = document.getElementById('context7Status') as HTMLElement;
+  const context7SourcesEl = document.getElementById('context7Sources') as HTMLElement;
 
   const screens = createScreenManager(homeScreenEl, diffScreenEl, overviewScreenEl);
   const renderer = createDiffRenderer({
@@ -63,6 +65,26 @@ declare function acquireVsCodeApi(): {
     proceedButtonEl.textContent = isLoading ? 'Generating...' : 'Proceed';
   }
 
+  function renderContext7Usage(message: WebviewMessage): void {
+    context7StatusEl.textContent = message.context7Message ?? 'Context7 status is not available.';
+    while (context7SourcesEl.firstChild) {
+      context7SourcesEl.removeChild(context7SourcesEl.firstChild);
+    }
+
+    const sources = message.context7Sources ?? [];
+    if (sources.length === 0) {
+      context7SourcesEl.classList.add('hidden');
+      return;
+    }
+
+    context7SourcesEl.classList.remove('hidden');
+    for (const source of sources) {
+      const item = document.createElement('li');
+      item.textContent = source;
+      context7SourcesEl.appendChild(item);
+    }
+  }
+
   window.addEventListener('message', (event: MessageEvent) => {
     const message = event.data as WebviewMessage;
     switch (message.command) {
@@ -86,6 +108,7 @@ declare function acquireVsCodeApi(): {
         } else if (message.overviewMarkdown) {
           overviewMarkdownEl.textContent = message.overviewMarkdown;
         }
+        renderContext7Usage(message);
         if (lastDiff) {
           renderer.renderOverview(lastDiff);
         }

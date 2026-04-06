@@ -26,4 +26,7 @@ export interface WebviewMessage {
   rawDiff?: string;
   overviewMarkdown?: string;
   overviewHtml?: string;
+  context7Used?: boolean;
+  context7Sources?: string[];
+  context7Message?: string;
 }
