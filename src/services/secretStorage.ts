@@ -1,6 +1,6 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
-const API_KEY_SECRET = 'git-commit-assist.apiKey';
+const API_KEY_SECRET = "git-commit-assist.apiKey";
 
 export class SecretStorageService {
   constructor(private readonly secrets: vscode.SecretStorage) {}
@@ -24,14 +24,14 @@ export class SecretStorageService {
     }
 
     const key = await vscode.window.showInputBox({
-      title: 'API Key',
-      prompt: 'Enter your ProxyAPI key for Gemini to enable code review',
+      title: "API Key",
+      prompt: "Enter your ProxyAPI key for Gemini to enable code review",
       password: true,
-      placeHolder: 'Enter API key...',
+      placeHolder: "Enter API key...",
       ignoreFocusOut: true,
       validateInput: (value) => {
         if (!value.trim()) {
-          return 'API key cannot be empty';
+          return "API key cannot be empty";
         }
         return undefined;
       },

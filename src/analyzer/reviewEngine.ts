@@ -1,11 +1,20 @@
-import { StagedDiff, DocumentationContext, ReviewReport, LibraryReference } from '../models/types';
+import {
+  StagedDiff,
+  DocumentationContext,
+  ReviewReport,
+  LibraryReference,
+} from "../models/types";
 
 export function extractLibraryReferences(diff: StagedDiff): LibraryReference[] {
   const refs: LibraryReference[] = [];
   const seen = new Set<string>();
 
-  const registerRef = (filePath: string, importStatement: string, name: string): void => {
-    if (!name || name.startsWith('.') || name.startsWith('/')) {
+  const registerRef = (
+    filePath: string,
+    importStatement: string,
+    name: string,
+  ): void => {
+    if (!name || name.startsWith(".") || name.startsWith("/")) {
       return;
     }
 
@@ -50,9 +59,9 @@ export function extractLibraryReferences(diff: StagedDiff): LibraryReference[] {
 
 export async function analyzeDiff(
   diff: StagedDiff,
-  docsContext: DocumentationContext[]
+  docsContext: DocumentationContext[],
 ): Promise<ReviewReport> {
   // TODO: Analyze the diff against documentation context
   // TODO: Generate structured suggestions grouped by category
-  throw new Error('Not implemented');
+  throw new Error("Not implemented");
 }

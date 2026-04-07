@@ -1,7 +1,7 @@
-import * as assert from 'assert';
+import * as assert from "assert";
 
-suite('ReviewEngine', () => {
-  test('placeholder', () => {
+suite("ReviewEngine", () => {
+  test("placeholder", () => {
     assert.ok(true);
   });
 });

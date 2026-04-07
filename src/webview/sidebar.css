@@ -122,7 +122,10 @@ body {
 }
 
 .diff-summary code {
-  color: var(--vscode-textPreformat-foreground, var(--vscode-textLink-foreground));
+  color: var(
+    --vscode-textPreformat-foreground,
+    var(--vscode-textLink-foreground)
+  );
   font-family: var(--vscode-editor-font-family);
 }
 
@@ -150,7 +153,10 @@ body {
   justify-content: space-between;
   gap: 8px;
   padding: 8px 10px;
-  background: var(--vscode-sideBarSectionHeader-background, var(--vscode-editor-background));
+  background: var(
+    --vscode-sideBarSectionHeader-background,
+    var(--vscode-editor-background)
+  );
   border-bottom: 1px solid var(--vscode-widget-border);
 }
 
@@ -188,12 +194,20 @@ body {
 }
 
 .diff-line-add {
-  background: color-mix(in srgb, var(--vscode-testing-iconPassed, #73c991) 16%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--vscode-testing-iconPassed, #73c991) 16%,
+    transparent
+  );
   color: var(--vscode-editor-foreground);
 }
 
 .diff-line-remove {
-  background: color-mix(in srgb, var(--vscode-testing-iconFailed, #f48771) 16%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--vscode-testing-iconFailed, #f48771) 16%,
+    transparent
+  );
   color: var(--vscode-editor-foreground);
 }
 
@@ -346,5 +360,8 @@ button.is-loading {
 }
 
 .secondary-button:hover {
-  background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-hoverBackground));
+  background: var(
+    --vscode-button-secondaryHoverBackground,
+    var(--vscode-button-hoverBackground)
+  );
 }
