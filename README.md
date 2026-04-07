@@ -46,6 +46,22 @@ When adding new functionality, follow these project conventions:
 - Prefer clear, testable logic and add/update tests for behavior changes.
 - Be respectful in code reviews: constructive comments, no personal remarks, and collaborative tone.
 
+## Contributors
+
+- [@nikzor](https://github.com/nikzor)
+  - Project initialization
+  - Overview screen
+  - Context7 integration
+  - Refactoring
+
+- [@1khazipov](https://github.com/1khazipov)
+  - Sidebar (initial phase)
+  - Analytical flow (prompt / review / results)
+
+- [@notoriousisk](https://github.com/notoriousisk)
+  - API key integration + Gemini
+  - Diff screen & key status
+
 ## License
 
 Licensed under the [MIT License](./LICENSE).
