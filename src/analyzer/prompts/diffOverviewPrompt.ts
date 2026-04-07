@@ -1,8 +1,8 @@
-import { DocumentationContext } from '../../models/types';
+import { DocumentationContext } from "../../models/types";
 
 function buildDocsContextBlock(docsContext: DocumentationContext[]): string {
   if (docsContext.length === 0) {
-    return 'Контекст документации Context7 не найден или недоступен.';
+    return "Контекст документации Context7 не найден или недоступен.";
   }
 
   return docsContext
@@ -13,15 +13,18 @@ function buildDocsContextBlock(docsContext: DocumentationContext[]): string {
         `### Документация ${index + 1}`,
         `Библиотека: ${doc.libraryName}`,
         `ID: ${doc.libraryId}`,
-        '```text',
+        "```text",
         shortContent,
-        '```',
-      ].join('\n');
+        "```",
+      ].join("\n");
     })
-    .join('\n\n');
+    .join("\n\n");
 }
 
-export function buildDiffOverviewPrompt(gitDiff: string, docsContext: DocumentationContext[] = []): string {
+export function buildDiffOverviewPrompt(
+  gitDiff: string,
+  docsContext: DocumentationContext[] = [],
+): string {
   const docsBlock = buildDocsContextBlock(docsContext);
 
   return `Ты — опытный code reviewer.

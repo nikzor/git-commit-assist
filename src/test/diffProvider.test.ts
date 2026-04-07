@@ -1,7 +1,7 @@
-import * as assert from 'assert';
+import * as assert from "assert";
 
-suite('DiffProvider', () => {
-  test('placeholder', () => {
+suite("DiffProvider", () => {
+  test("placeholder", () => {
     assert.ok(true);
   });
 });

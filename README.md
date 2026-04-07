@@ -1,21 +1,33 @@
 # Git Commit Assist
 
-A VS Code extension that reviews your staged git changes and provides code improvement suggestions before you commit. Uses the [Context7](https://context7.com) MCP server to ground suggestions in up-to-date library documentation.
+`Git Commit Assist` is a VS Code extension that analyzes staged Git changes and generates an AI-powered review before you commit.  
+It helps catch issues early and gives practical suggestions with documentation context.
+
+## Description
+
+The extension reads your staged diff, detects imported libraries, enriches the review prompt with relevant docs, and returns a structured overview in the sidebar.  
+To generate analysis, it uses Gemini and stores your API key securely in VS Code Secret Storage.
 
 ## Features
 
-- **Staged diff analysis** — reads `git diff --cached` and parses changes per file.
-- **Documentation-aware** — resolves libraries from your imports via Context7 MCP and fetches relevant docs.
-- **Structured review report** — displays suggestions categorized by style, performance, correctness, security, and best practices in a webview panel.
+- Analyze staged changes from `git diff --cached`.
+- Generate concise AI overview for the current patch.
+- Extract third-party imports from diff and fetch related docs.
+- Show Context7 usage status and sources in the UI.
+- Keep API key in secure storage and allow removing it from extension commands.
 
-## Usage
+## Gemini Integration (Short)
 
-1. Stage your changes with `git add`.
-2. Open the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`).
-3. Run **Git Commit Assist: Review Staged Changes**.
-4. Review the suggestions in the report panel that opens.
+`Git Commit Assist` uses Gemini (`gemini-3.1-flash-lite-preview`) to produce code review feedback for staged diffs.  
+The extension sends a prepared prompt to Gemini and renders the returned markdown in a webview panel.  
+For model interaction, the extension uses the ProxyAPI gateway: [https://proxyapi.ru/](https://proxyapi.ru/).
 
-## Development
+## Context7 MCP Integration (Short)
+
+The extension integrates with Context7 via the `ctx7` CLI (`npx ctx7 ...`) to resolve library IDs and fetch up-to-date API docs.  
+This documentation is injected into the AI prompt so suggestions are grounded in current library usage guidance.
+
+## Local Run
 
 ```bash
 npm install
@@ -24,6 +36,16 @@ npm run compile
 
 Press **F5** to launch the Extension Development Host.
 
+## Adding New Features (Code of Conduct)
+
+When adding new functionality, follow these project conventions:
+
+- Keep changes focused and small (one feature per PR when possible).
+- Preserve current UX flow in the sidebar and command palette.
+- Avoid breaking existing commands: `reviewDiff`, `generateOverview`, and API key actions.
+- Prefer clear, testable logic and add/update tests for behavior changes.
+- Be respectful in code reviews: constructive comments, no personal remarks, and collaborative tone.
+
 ## License
 
-MIT
+Licensed under the [MIT License](./LICENSE).

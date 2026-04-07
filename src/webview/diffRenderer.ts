@@ -1,4 +1,4 @@
-import { DiffFile, GitDiffSummary } from './types';
+import { DiffFile, GitDiffSummary } from "./types";
 
 interface DiffRendererElements {
   diffMetaEl: HTMLElement;
@@ -16,7 +16,7 @@ export interface DiffRenderer {
 export function createDiffRenderer(
   elements: DiffRendererElements,
   maxFilesToRender = 10,
-  maxLinesPerFile = 80
+  maxLinesPerFile = 80,
 ): DiffRenderer {
   const {
     diffMetaEl,
@@ -32,10 +32,15 @@ export function createDiffRenderer(
     }
   }
 
-  function appendLine(container: HTMLElement, lineType: 'add' | 'remove' | 'context', text: string): void {
-    const lineEl = document.createElement('div');
+  function appendLine(
+    container: HTMLElement,
+    lineType: "add" | "remove" | "context",
+    text: string,
+  ): void {
+    const lineEl = document.createElement("div");
     lineEl.className = `diff-line diff-line-${lineType}`;
-    const prefix = lineType === 'add' ? '+ ' : lineType === 'remove' ? '- ' : '  ';
+    const prefix =
+      lineType === "add" ? "+ " : lineType === "remove" ? "- " : "  ";
     lineEl.textContent = `${prefix}${text}`;
     container.appendChild(lineEl);
   }
@@ -47,7 +52,7 @@ export function createDiffRenderer(
         acc.removed += hunk.removedLines.length;
         return acc;
       },
-      { added: 0, removed: 0 }
+      { added: 0, removed: 0 },
     );
   }
 
@@ -55,35 +60,35 @@ export function createDiffRenderer(
     clearNode(targetEl);
 
     if (diff.files.length === 0) {
-      const emptyEl = document.createElement('p');
-      emptyEl.className = 'empty-diff';
-      emptyEl.textContent = 'No staged diff loaded.';
+      const emptyEl = document.createElement("p");
+      emptyEl.className = "empty-diff";
+      emptyEl.textContent = "No staged diff loaded.";
       targetEl.appendChild(emptyEl);
       return;
     }
 
     const filesToRender = diff.files.slice(0, maxFilesToRender);
     for (const file of filesToRender) {
-      const fileCardEl = document.createElement('section');
-      fileCardEl.className = 'diff-file-card';
+      const fileCardEl = document.createElement("section");
+      fileCardEl.className = "diff-file-card";
 
-      const headerEl = document.createElement('div');
-      headerEl.className = 'diff-file-header';
+      const headerEl = document.createElement("div");
+      headerEl.className = "diff-file-header";
 
-      const pathEl = document.createElement('div');
-      pathEl.className = 'diff-file-path';
+      const pathEl = document.createElement("div");
+      pathEl.className = "diff-file-path";
       pathEl.textContent = file.filePath;
 
       const stats = countFileStats(file);
-      const statsEl = document.createElement('div');
-      statsEl.className = 'diff-file-stats';
+      const statsEl = document.createElement("div");
+      statsEl.className = "diff-file-stats";
       statsEl.textContent = `+${stats.added}  -${stats.removed}`;
 
       headerEl.appendChild(pathEl);
       headerEl.appendChild(statsEl);
 
-      const linesEl = document.createElement('div');
-      linesEl.className = 'diff-file-lines';
+      const linesEl = document.createElement("div");
+      linesEl.className = "diff-file-lines";
       let renderedLines = 0;
 
       for (const hunk of file.hunks) {
@@ -91,8 +96,8 @@ export function createDiffRenderer(
           break;
         }
 
-        const hunkHeaderEl = document.createElement('div');
-        hunkHeaderEl.className = 'diff-hunk-header';
+        const hunkHeaderEl = document.createElement("div");
+        hunkHeaderEl.className = "diff-hunk-header";
         hunkHeaderEl.textContent = hunk.header;
         linesEl.appendChild(hunkHeaderEl);
 
@@ -100,7 +105,7 @@ export function createDiffRenderer(
           if (renderedLines >= maxLinesPerFile) {
             break;
           }
-          appendLine(linesEl, 'context', contextLine);
+          appendLine(linesEl, "context", contextLine);
           renderedLines += 1;
         }
 
@@ -108,7 +113,7 @@ export function createDiffRenderer(
           if (renderedLines >= maxLinesPerFile) {
             break;
           }
-          appendLine(linesEl, 'remove', removedLine);
+          appendLine(linesEl, "remove", removedLine);
           renderedLines += 1;
         }
 
@@ -116,15 +121,15 @@ export function createDiffRenderer(
           if (renderedLines >= maxLinesPerFile) {
             break;
           }
-          appendLine(linesEl, 'add', addedLine);
+          appendLine(linesEl, "add", addedLine);
           renderedLines += 1;
         }
       }
 
       if (renderedLines >= maxLinesPerFile) {
-        const truncatedEl = document.createElement('div');
-        truncatedEl.className = 'diff-truncated';
-        truncatedEl.textContent = 'Preview truncated for this file.';
+        const truncatedEl = document.createElement("div");
+        truncatedEl.className = "diff-truncated";
+        truncatedEl.textContent = "Preview truncated for this file.";
         linesEl.appendChild(truncatedEl);
       }
 
@@ -134,8 +139,8 @@ export function createDiffRenderer(
     }
 
     if (diff.files.length > filesToRender.length) {
-      const truncatedFilesEl = document.createElement('p');
-      truncatedFilesEl.className = 'empty-diff';
+      const truncatedFilesEl = document.createElement("p");
+      truncatedFilesEl.className = "empty-diff";
       truncatedFilesEl.textContent = `Showing ${filesToRender.length} of ${diff.files.length} files.`;
       targetEl.appendChild(truncatedFilesEl);
     }
@@ -143,9 +148,10 @@ export function createDiffRenderer(
 
   return {
     renderDiff(diff: GitDiffSummary): void {
-      diffMetaEl.textContent = diff.filesCount === 0
-        ? 'No staged changes found.'
-        : 'Staged changes loaded from your workspace.';
+      diffMetaEl.textContent =
+        diff.filesCount === 0
+          ? "No staged changes found."
+          : "Staged changes loaded from your workspace.";
 
       diffStatsEl.textContent = `Files: ${diff.filesCount} | +${diff.addedLines} | -${diff.removedLines}`;
       renderFiles(diffFilesListEl, diff);

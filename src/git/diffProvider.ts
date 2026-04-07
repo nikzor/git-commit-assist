@@ -1,14 +1,14 @@
-import { execFile } from 'child_process';
-import * as path from 'path';
-import { promisify } from 'util';
-import { DiffFile, DiffHunk, StagedDiff } from '../models/types';
+import { execFile } from "child_process";
+import * as path from "path";
+import { promisify } from "util";
+import { DiffFile, DiffHunk, StagedDiff } from "../models/types";
 
 const execFileAsync = promisify(execFile);
 
 function detectLanguage(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
   if (!ext) {
-    return 'text';
+    return "text";
   }
 
   return ext.slice(1);
@@ -16,7 +16,7 @@ function detectLanguage(filePath: string): string {
 
 function parseDiff(rawDiff: string): DiffFile[] {
   const files: DiffFile[] = [];
-  const lines = rawDiff.split('\n');
+  const lines = rawDiff.split("\n");
   let currentFile: DiffFile | undefined;
   let currentHunk: DiffHunk | undefined;
 
@@ -40,10 +40,10 @@ function parseDiff(rawDiff: string): DiffFile[] {
   };
 
   for (const line of lines) {
-    if (line.startsWith('diff --git ')) {
+    if (line.startsWith("diff --git ")) {
       pushCurrentFile();
       const match = line.match(/^diff --git a\/(.+) b\/(.+)$/);
-      const filePath = match?.[2] ?? 'unknown';
+      const filePath = match?.[2] ?? "unknown";
       currentFile = {
         filePath,
         language: detectLanguage(filePath),
@@ -56,7 +56,7 @@ function parseDiff(rawDiff: string): DiffFile[] {
       continue;
     }
 
-    if (line.startsWith('@@')) {
+    if (line.startsWith("@@")) {
       pushCurrentHunk();
       currentHunk = {
         header: line,
@@ -71,17 +71,17 @@ function parseDiff(rawDiff: string): DiffFile[] {
       continue;
     }
 
-    if (line.startsWith('+') && !line.startsWith('+++')) {
+    if (line.startsWith("+") && !line.startsWith("+++")) {
       currentHunk.addedLines.push(line.slice(1));
       continue;
     }
 
-    if (line.startsWith('-') && !line.startsWith('---')) {
+    if (line.startsWith("-") && !line.startsWith("---")) {
       currentHunk.removedLines.push(line.slice(1));
       continue;
     }
 
-    if (line.startsWith(' ')) {
+    if (line.startsWith(" ")) {
       currentHunk.context.push(line.slice(1));
     }
   }
@@ -90,15 +90,17 @@ function parseDiff(rawDiff: string): DiffFile[] {
   return files;
 }
 
-export async function getStagedDiff(workspaceRoot: string): Promise<StagedDiff> {
+export async function getStagedDiff(
+  workspaceRoot: string,
+): Promise<StagedDiff> {
   try {
     const { stdout } = await execFileAsync(
-      'git',
-      ['diff', '--cached', '--no-color', '--unified=3'],
-      { cwd: workspaceRoot, maxBuffer: 10 * 1024 * 1024 }
+      "git",
+      ["diff", "--cached", "--no-color", "--unified=3"],
+      { cwd: workspaceRoot, maxBuffer: 10 * 1024 * 1024 },
     );
 
-    const raw = stdout ?? '';
+    const raw = stdout ?? "";
     return {
       raw,
       files: parseDiff(raw),

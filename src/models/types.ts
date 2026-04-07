@@ -39,8 +39,13 @@ export interface DocumentationContext {
 export interface ReviewSuggestion {
   filePath: string;
   line: number | null;
-  severity: 'info' | 'warning' | 'error';
-  category: 'style' | 'performance' | 'correctness' | 'security' | 'best-practice';
+  severity: "info" | "warning" | "error";
+  category:
+    | "style"
+    | "performance"
+    | "correctness"
+    | "security"
+    | "best-practice";
   message: string;
   suggestedCode: string | null;
   docReference: string | null;
