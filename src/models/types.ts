@@ -17,7 +17,6 @@ export interface StagedDiff {
 }
 
 export interface GitDiffSummary {
-  raw: string;
   filesCount: number;
   addedLines: number;
   removedLines: number;

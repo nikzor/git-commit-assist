@@ -1,13 +1,12 @@
 import * as vscode from "vscode";
-import { promises as fs } from "fs";
-import * as path from "path";
 import { GeminiRepository } from "../ai/geminiRepository";
+import { extractLibraryReferencesFromRawDiff } from "../analyzer/libraryReferences";
 import {
   buildDiffCompactionPromptWithDocs,
   buildDiffOverviewPrompt,
 } from "../analyzer/prompts/diffOverviewPrompt";
 import { fetchDocumentationForReferences } from "../context7/client";
-import { DocumentationContext, LibraryReference } from "../models/types";
+import { DocumentationContext } from "../models/types";
 import { SecretStorageService } from "../services/secretStorage";
 
 const MAX_COMPACT_DIFF_CHARS = 22000;
@@ -16,48 +15,6 @@ const MAX_CONTEXT7_CHARS_PER_ENTRY = 1200;
 const MAX_MARKDOWN_SECTIONS = 3;
 const MAX_MARKDOWN_CHARS_PER_SECTION = 900;
 const MAX_MARKDOWN_CHARS_TOTAL_FOR_REVIEW = 2800;
-
-function extractLibraryReferencesFromRawDiff(
-  rawDiff: string,
-): LibraryReference[] {
-  const refs: LibraryReference[] = [];
-  const seen = new Set<string>();
-  const lines = rawDiff.split("\n");
-
-  for (const line of lines) {
-    if (!line.startsWith("+") || line.startsWith("+++")) {
-      continue;
-    }
-
-    const content = line.slice(1);
-    const fromMatch = content.match(/from\s+['"]([^'"]+)['"]/);
-    const importMatch = content.match(/import\s+['"]([^'"]+)['"]/);
-    const requireMatch = content.match(/require\(\s*['"]([^'"]+)['"]\s*\)/);
-    const libraryName = fromMatch?.[1] ?? importMatch?.[1] ?? requireMatch?.[1];
-
-    if (
-      !libraryName ||
-      libraryName.startsWith(".") ||
-      libraryName.startsWith("/")
-    ) {
-      continue;
-    }
-
-    const key = `${libraryName}:${content}`;
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-
-    refs.push({
-      name: libraryName,
-      importStatement: content,
-      filePath: "unknown",
-    });
-  }
-
-  return refs;
-}
 
 function normalizeCompactedDiff(compactedDiff: string, fallbackDiff: string): string {
   const trimmedCompactedDiff = compactedDiff.trim();
@@ -233,8 +190,10 @@ export async function generateOverviewCommand(
         let docsContext: DocumentationContext[] = [];
         let context7Message = "Context7 не использовался.";
         try {
-          docsContext =
-            await fetchDocumentationForReferences(libraryReferences);
+          docsContext = await fetchDocumentationForReferences(libraryReferences, {
+            workspaceRoot:
+              vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+          });
           context7Message =
             docsContext.length > 0
               ? `Context7: получено ${docsContext.length} набора документации.`
@@ -312,10 +271,13 @@ async function loadMarkdownContext(): Promise<string> {
   }
 
   const snippets: string[] = [];
+  const decoder = new TextDecoder("utf-8");
   let totalChars = 0;
   for (const markdownUri of markdownUris) {
     try {
-      const content = await fs.readFile(markdownUri.fsPath, "utf-8");
+      const content = decoder.decode(
+        await vscode.workspace.fs.readFile(markdownUri),
+      );
       const trimmedContent = content.trim();
       if (!trimmedContent) {
         continue;
@@ -330,9 +292,7 @@ async function loadMarkdownContext(): Promise<string> {
         0,
         Math.min(MAX_MARKDOWN_CHARS_PER_FILE, remainingChars),
       );
-      const relativePath = path
-        .relative(workspaceFolder.uri.fsPath, markdownUri.fsPath)
-        .replace(/\\/g, "/");
+      const relativePath = vscode.workspace.asRelativePath(markdownUri, false);
 
       snippets.push([`### ${relativePath}`, "```markdown", fileChunk, "```"].join("\n"));
       totalChars += fileChunk.length;

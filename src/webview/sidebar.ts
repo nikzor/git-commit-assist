@@ -78,7 +78,6 @@ declare function acquireVsCodeApi(): {
         setProceedLoading(true);
         vscode.postMessage({
           command: "proceedReview",
-          rawDiff: lastDiff.raw,
           includeMarkdownFiles: includeMarkdownFilesEl.checked,
         });
       }

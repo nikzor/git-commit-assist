@@ -1,6 +1,4 @@
 import * as vscode from "vscode";
-import * as fs from "fs";
-import * as path from "path";
 import { GitDiffSummary, ReviewReport, StagedDiff } from "../models/types";
 import { SecretStorageService } from "../services/secretStorage";
 
@@ -8,6 +6,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   public static readonly viewId = "git-commit-assist.sidebar";
 
   private view?: vscode.WebviewView;
+  private lastRawDiff = "";
 
   constructor(
     private readonly extensionUri: vscode.Uri,
@@ -28,7 +27,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       ],
     };
 
-    webviewView.webview.html = this.getHtml(webviewView.webview);
+    webviewView.webview.html = "<html><body>Loading Git Commit Assist...</body></html>";
+    void this.setWebviewHtml(webviewView.webview);
 
     webviewView.webview.onDidReceiveMessage((message) => {
       if (message.command === "startReview") {
@@ -37,10 +37,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       }
 
       if (message.command === "proceedReview") {
-        const rawDiff =
-          typeof message.rawDiff === "string" ? message.rawDiff : "";
         const includeMarkdownFiles = Boolean(message.includeMarkdownFiles);
-        void this.handleProceedReview(rawDiff, includeMarkdownFiles);
+        void this.handleProceedReview(includeMarkdownFiles);
         return;
       }
 
@@ -62,8 +60,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   public showDiff(diff: StagedDiff): void {
+    this.lastRawDiff = diff.raw;
+
     const summary: GitDiffSummary = {
-      raw: diff.raw,
       filesCount: diff.files.length,
       addedLines: diff.files.reduce(
         (acc, file) =>
@@ -93,10 +92,17 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
 
   private async handleProceedReview(
-    rawDiff: string,
     includeMarkdownFiles: boolean,
   ): Promise<void> {
     if (!this.view) {
+      return;
+    }
+
+    if (!this.lastRawDiff.trim()) {
+      this.view.webview.postMessage({ command: "overviewFailed" });
+      vscode.window.showErrorMessage(
+        "Git Commit Assist: no staged diff available for overview.",
+      );
       return;
     }
 
@@ -112,7 +118,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         | undefined
       >(
         "git-commit-assist.generateOverview",
-        rawDiff,
+        this.lastRawDiff,
         includeMarkdownFiles,
       );
 
@@ -145,9 +151,21 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     this.updateKeyStatus(!!key);
   }
 
-  private getHtml(webview: vscode.Webview): string {
-    const webviewDir = path.join(this.extensionUri.fsPath, "out", "webview");
-    const screenDir = path.join(webviewDir, "screens");
+  private async setWebviewHtml(webview: vscode.Webview): Promise<void> {
+    try {
+      webview.html = await this.getHtml(webview);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      webview.html = `<html><body>Failed to load UI: ${message}</body></html>`;
+      vscode.window.showErrorMessage(
+        `Git Commit Assist: failed to load sidebar UI (${message}).`,
+      );
+    }
+  }
+
+  private async getHtml(webview: vscode.Webview): Promise<string> {
+    const webviewRoot = vscode.Uri.joinPath(this.extensionUri, "out", "webview");
+    const screenRoot = vscode.Uri.joinPath(webviewRoot, "screens");
 
     const cssUri = webview.asWebviewUri(
       vscode.Uri.joinPath(this.extensionUri, "out", "webview", "sidebar.css"),
@@ -156,20 +174,20 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       vscode.Uri.joinPath(this.extensionUri, "out", "webview", "sidebar.js"),
     );
 
-    let html = fs.readFileSync(path.join(webviewDir, "sidebar.html"), "utf-8");
-    const homeScreen = fs.readFileSync(
-      path.join(screenDir, "home.html"),
-      "utf-8",
+    const htmlTemplate = await this.readTextFile(
+      vscode.Uri.joinPath(webviewRoot, "sidebar.html"),
     );
-    const diffScreen = fs.readFileSync(
-      path.join(screenDir, "diff.html"),
-      "utf-8",
+    const homeScreen = await this.readTextFile(
+      vscode.Uri.joinPath(screenRoot, "home.html"),
     );
-    const overviewScreen = fs.readFileSync(
-      path.join(screenDir, "overview.html"),
-      "utf-8",
+    const diffScreen = await this.readTextFile(
+      vscode.Uri.joinPath(screenRoot, "diff.html"),
+    );
+    const overviewScreen = await this.readTextFile(
+      vscode.Uri.joinPath(screenRoot, "overview.html"),
     );
 
+    let html = htmlTemplate;
     html = html.replace(/\{\{cssUri\}\}/g, cssUri.toString());
     html = html.replace(/\{\{scriptUri\}\}/g, scriptUri.toString());
     html = html.replace(/\{\{cspSource\}\}/g, webview.cspSource);
@@ -178,5 +196,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     html = html.replace(/\{\{overviewScreen\}\}/g, overviewScreen);
 
     return html;
+  }
+
+  private async readTextFile(uri: vscode.Uri): Promise<string> {
+    const content = await vscode.workspace.fs.readFile(uri);
+    return Buffer.from(content).toString("utf-8");
   }
 }
