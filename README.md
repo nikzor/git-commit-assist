@@ -16,6 +16,52 @@ To generate analysis, it uses Gemini and stores your API key securely in VS Code
 - Show Context7 usage status and sources in the UI.
 - Keep API key in secure storage and allow removing it from extension commands.
 
+## Screenshots
+
+### Home Screen
+
+<img src="./resources/screenshots/home.jpg" alt="Git Commit Assist home screen" width="320" />
+
+The home screen shows the extension status before analysis starts: current version, Context7 integration status, API key status, and the optional checkbox for including `.md` files from `/docs`.
+
+### Diff Preview
+
+<img src="./resources/screenshots/diff-preview.jpg" alt="Git Commit Assist diff preview screen" width="320" />
+
+After clicking **Start Review**, the extension reads `git diff --cached`, summarizes the staged files, and lets you verify the patch before sending it for analysis.
+
+### Review Results
+
+<img src="./resources/screenshots/review-results.jpg" alt="Git Commit Assist review results screen" width="320" />
+
+The results screen renders the AI review in markdown and keeps the feedback focused on the staged diff, so you can inspect risks and improvements before creating the commit.
+
+## How It Works
+
+1. Stage the files you want to review with `git add`.
+2. Open the **Git Commit Assist** sidebar in VS Code.
+3. Click **Start Review** to load the staged diff preview.
+4. Confirm the preview with **Proceed**.
+5. The extension extracts library references from the diff, optionally loads markdown context from `/docs`, fetches relevant Context7 documentation, and prepares a compact review prompt.
+6. Gemini generates the final overview, and the result is displayed in the sidebar.
+
+This flow keeps the review limited to staged changes only, which makes it practical to run right before every commit.
+
+## Example Review Flow
+
+Example:
+
+```bash
+git add .gitignore lib/keys.dart lib/services/dio_client.dart
+```
+
+In a change like the one shown in the screenshots, the extension can detect that a hardcoded API key was removed, that a secrets file was added to `.gitignore`, and that application code was changed in the same patch. The generated review may then:
+
+- highlight the security improvement of removing a committed secret,
+- confirm that ignoring the local secrets file reduces the chance of leaking credentials again,
+- warn about architectural or runtime risks in the updated service code,
+- point out missing validation or error handling before the commit is finalized.
+
 ## Gemini Integration (Short)
 
 `Git Commit Assist` uses Gemini (`gemini-3.1-flash-lite-preview`) to produce code review feedback for staged diffs.  
