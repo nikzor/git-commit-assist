@@ -24,6 +24,9 @@ declare function acquireVsCodeApi(): {
   const proceedButtonEl = document.getElementById(
     "proceedReview",
   ) as HTMLButtonElement;
+  const includeMarkdownFilesEl = document.getElementById(
+    "includeMarkdownFiles",
+  ) as HTMLInputElement;
   const overviewDiffStatsEl = document.getElementById(
     "overviewDiffStats",
   ) as HTMLElement;
@@ -73,7 +76,10 @@ declare function acquireVsCodeApi(): {
     () => {
       if (lastDiff) {
         setProceedLoading(true);
-        vscode.postMessage({ command: "proceedReview", rawDiff: lastDiff.raw });
+        vscode.postMessage({
+          command: "proceedReview",
+          includeMarkdownFiles: includeMarkdownFilesEl.checked,
+        });
       }
     },
   );

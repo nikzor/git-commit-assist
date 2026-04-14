@@ -1,63 +1,160 @@
 import * as vscode from "vscode";
 import { GeminiRepository } from "../ai/geminiRepository";
-import { buildDiffOverviewPrompt } from "../analyzer/prompts/diffOverviewPrompt";
+import { extractLibraryReferencesFromRawDiff } from "../analyzer/libraryReferences";
+import {
+  buildDiffCompactionPromptWithDocs,
+  buildDiffOverviewPrompt,
+} from "../analyzer/prompts/diffOverviewPrompt";
 import { fetchDocumentationForReferences } from "../context7/client";
-import { DocumentationContext, LibraryReference } from "../models/types";
+import { DocumentationContext } from "../models/types";
 import { SecretStorageService } from "../services/secretStorage";
 
-function extractLibraryReferencesFromRawDiff(
-  rawDiff: string,
-): LibraryReference[] {
-  const refs: LibraryReference[] = [];
-  const seen = new Set<string>();
-  const lines = rawDiff.split("\n");
+const MAX_COMPACT_DIFF_CHARS = 22000;
+const MAX_CONTEXT7_ENTRIES = 10;
+const MAX_CONTEXT7_CHARS_PER_ENTRY = 1200;
+const MAX_MARKDOWN_SECTIONS = 3;
+const MAX_MARKDOWN_CHARS_PER_SECTION = 900;
+const MAX_MARKDOWN_CHARS_TOTAL_FOR_REVIEW = 2800;
 
-  for (const line of lines) {
-    if (!line.startsWith("+") || line.startsWith("+++")) {
-      continue;
-    }
-
-    const content = line.slice(1);
-    const fromMatch = content.match(/from\s+['"]([^'"]+)['"]/);
-    const importMatch = content.match(/import\s+['"]([^'"]+)['"]/);
-    const requireMatch = content.match(/require\(\s*['"]([^'"]+)['"]\s*\)/);
-    const libraryName = fromMatch?.[1] ?? importMatch?.[1] ?? requireMatch?.[1];
-
-    if (
-      !libraryName ||
-      libraryName.startsWith(".") ||
-      libraryName.startsWith("/")
-    ) {
-      continue;
-    }
-
-    const key = `${libraryName}:${content}`;
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-
-    refs.push({
-      name: libraryName,
-      importStatement: content,
-      filePath: "unknown",
-    });
+function normalizeCompactedDiff(compactedDiff: string, fallbackDiff: string): string {
+  const trimmedCompactedDiff = compactedDiff.trim();
+  if (!trimmedCompactedDiff) {
+    return fallbackDiff;
   }
 
-  return refs;
+  return trimmedCompactedDiff.length > MAX_COMPACT_DIFF_CHARS
+    ? `${trimmedCompactedDiff.slice(0, MAX_COMPACT_DIFF_CHARS)}\n\n[truncated]`
+    : trimmedCompactedDiff;
+}
+
+function extractKeywords(text: string): Set<string> {
+  const tokens = text
+    .toLowerCase()
+    .split(/[^a-z0-9_./-]+/i)
+    .filter((token) => token.length >= 4);
+  return new Set(tokens);
+}
+
+function calculateRelevanceScore(content: string, keywords: Set<string>): number {
+  if (keywords.size === 0) {
+    return 0;
+  }
+
+  const contentLower = content.toLowerCase();
+  let score = 0;
+  for (const keyword of keywords) {
+    if (contentLower.includes(keyword)) {
+      score += 1;
+    }
+  }
+
+  return score;
+}
+
+function compactDocumentationContext(
+  docsContext: DocumentationContext[],
+  compactedDiff: string,
+): DocumentationContext[] {
+  if (docsContext.length === 0) {
+    return [];
+  }
+
+  const keywords = extractKeywords(compactedDiff);
+  return docsContext
+    .map((doc) => ({
+      ...doc,
+      score: calculateRelevanceScore(
+        `${doc.libraryName}\n${doc.libraryId}\n${doc.content}`,
+        keywords,
+      ),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, MAX_CONTEXT7_ENTRIES)
+    .map((doc) => ({
+      libraryId: doc.libraryId,
+      libraryName: doc.libraryName,
+      content: doc.content.slice(0, MAX_CONTEXT7_CHARS_PER_ENTRY),
+    }));
+}
+
+interface MarkdownSection {
+  heading: string;
+  content: string;
+}
+
+function compactMarkdownContext(
+  markdownContext: string,
+  compactedDiff: string,
+): string {
+  const trimmedContext = markdownContext.trim();
+  if (!trimmedContext) {
+    return "";
+  }
+
+  const chunks = trimmedContext.split("\n### ");
+  const sections: MarkdownSection[] = chunks
+    .map((chunk, index) => {
+      const normalizedChunk = index === 0 ? chunk : `### ${chunk}`;
+      const lines = normalizedChunk.split("\n");
+      const headingLine = lines[0]?.startsWith("### ")
+        ? lines[0]
+        : "### docs/unknown.md";
+      const content = lines.slice(1).join("\n").trim();
+
+      return {
+        heading: headingLine,
+        content,
+      };
+    })
+    .filter((section) => section.content.length > 0);
+
+  const keywords = extractKeywords(compactedDiff);
+  const compactedSections = sections
+    .map((section) => ({
+      ...section,
+      score: calculateRelevanceScore(
+        `${section.heading}\n${section.content}`,
+        keywords,
+      ),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, MAX_MARKDOWN_SECTIONS);
+
+  let totalChars = 0;
+  const resultSections: string[] = [];
+  for (const section of compactedSections) {
+    if (totalChars >= MAX_MARKDOWN_CHARS_TOTAL_FOR_REVIEW) {
+      break;
+    }
+
+    const remainingChars = MAX_MARKDOWN_CHARS_TOTAL_FOR_REVIEW - totalChars;
+    const chunk = section.content.slice(
+      0,
+      Math.min(MAX_MARKDOWN_CHARS_PER_SECTION, remainingChars),
+    );
+    if (!chunk.trim()) {
+      continue;
+    }
+
+    resultSections.push([section.heading, chunk].join("\n"));
+    totalChars += chunk.length;
+  }
+
+  return resultSections.join("\n\n");
 }
 
 export async function generateOverviewCommand(
   rawDiff: string,
   secretService: SecretStorageService,
+  includeMarkdownFiles = false,
 ): Promise<
   | {
-      markdown: string;
-      html: string;
-      context7Used: boolean;
-      context7Sources: string[];
-      context7Message: string;
-    }
+    markdown: string;
+    html: string;
+    context7Used: boolean;
+    context7Sources: string[];
+    context7Message: string;
+  }
   | undefined
 > {
   if (!rawDiff.trim()) {
@@ -75,6 +172,10 @@ export async function generateOverviewCommand(
     return undefined;
   }
 
+  const markdownContext = includeMarkdownFiles
+    ? await loadMarkdownContext()
+    : "";
+
   return vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
@@ -84,12 +185,15 @@ export async function generateOverviewCommand(
     async () => {
       try {
         const { marked } = await import("marked");
+        const geminiRepository = new GeminiRepository(apiKey);
         const libraryReferences = extractLibraryReferencesFromRawDiff(rawDiff);
         let docsContext: DocumentationContext[] = [];
         let context7Message = "Context7 не использовался.";
         try {
-          docsContext =
-            await fetchDocumentationForReferences(libraryReferences);
+          docsContext = await fetchDocumentationForReferences(libraryReferences, {
+            workspaceRoot:
+              vscode.workspace.workspaceFolders?.[0]?.uri.fsPath,
+          });
           context7Message =
             docsContext.length > 0
               ? `Context7: получено ${docsContext.length} набора документации.`
@@ -104,9 +208,28 @@ export async function generateOverviewCommand(
           );
           context7Message = `Context7 недоступен: ${contextMessage}`;
         }
+        const compactedDiffPrompt = buildDiffCompactionPromptWithDocs(
+          rawDiff,
+          docsContext,
+        );
+        const compactedDiff = normalizeCompactedDiff(
+          await geminiRepository.sendMessage(compactedDiffPrompt),
+          rawDiff,
+        );
+        const compactedDocsContext = compactDocumentationContext(
+          docsContext,
+          compactedDiff,
+        );
+        const compactedMarkdownContext = compactMarkdownContext(
+          markdownContext,
+          compactedDiff,
+        );
 
-        const prompt = buildDiffOverviewPrompt(rawDiff, docsContext);
-        const geminiRepository = new GeminiRepository(apiKey);
+        const prompt = buildDiffOverviewPrompt(
+          compactedDiff,
+          compactedDocsContext,
+          compactedMarkdownContext,
+        );
         const overview = await geminiRepository.sendMessage(prompt);
         const overviewHtml = marked.parse(overview, { async: false }) as string;
 
@@ -116,8 +239,8 @@ export async function generateOverviewCommand(
         return {
           markdown: overview,
           html: overviewHtml,
-          context7Used: docsContext.length > 0,
-          context7Sources: docsContext.map(
+          context7Used: compactedDocsContext.length > 0,
+          context7Sources: compactedDocsContext.map(
             (doc) => `${doc.libraryName} (${doc.libraryId})`,
           ),
           context7Message,
@@ -129,4 +252,54 @@ export async function generateOverviewCommand(
       }
     },
   );
+}
+
+const MAX_MARKDOWN_CHARS_PER_FILE = 3500;
+const MAX_MARKDOWN_CHARS_TOTAL = 12000;
+
+async function loadMarkdownContext(): Promise<string> {
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    return "";
+  }
+
+  const markdownUris = await vscode.workspace.findFiles(
+    new vscode.RelativePattern(workspaceFolder, "docs/**/*.md"),
+  );
+  if (markdownUris.length === 0) {
+    return "";
+  }
+
+  const snippets: string[] = [];
+  const decoder = new TextDecoder("utf-8");
+  let totalChars = 0;
+  for (const markdownUri of markdownUris) {
+    try {
+      const content = decoder.decode(
+        await vscode.workspace.fs.readFile(markdownUri),
+      );
+      const trimmedContent = content.trim();
+      if (!trimmedContent) {
+        continue;
+      }
+
+      if (totalChars >= MAX_MARKDOWN_CHARS_TOTAL) {
+        break;
+      }
+
+      const remainingChars = MAX_MARKDOWN_CHARS_TOTAL - totalChars;
+      const fileChunk = trimmedContent.slice(
+        0,
+        Math.min(MAX_MARKDOWN_CHARS_PER_FILE, remainingChars),
+      );
+      const relativePath = vscode.workspace.asRelativePath(markdownUri, false);
+
+      snippets.push([`### ${relativePath}`, "```markdown", fileChunk, "```"].join("\n"));
+      totalChars += fileChunk.length;
+    } catch {
+      // File is optional: skip missing or unreadable markdown files.
+    }
+  }
+
+  return snippets.join("\n\n");
 }

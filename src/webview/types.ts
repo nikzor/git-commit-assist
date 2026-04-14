@@ -1,5 +1,4 @@
 export interface GitDiffSummary {
-  raw: string;
   filesCount: number;
   addedLines: number;
   removedLines: number;
@@ -23,7 +22,7 @@ export interface WebviewMessage {
   command: string;
   configured?: boolean;
   diff?: GitDiffSummary;
-  rawDiff?: string;
+  includeMarkdownFiles?: boolean;
   overviewMarkdown?: string;
   overviewHtml?: string;
   context7Used?: boolean;

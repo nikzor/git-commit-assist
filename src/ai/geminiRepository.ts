@@ -5,8 +5,16 @@ interface GenerateContentResponse {
   text?: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function createClient(apiKey: string): Promise<any> {
+interface GeminiClient {
+  models: {
+    generateContent(options: {
+      model: string;
+      contents: string;
+    }): Promise<GenerateContentResponse>;
+  };
+}
+
+async function createClient(apiKey: string): Promise<GeminiClient> {
   const { GoogleGenAI } = await import("@google/genai");
   return new GoogleGenAI({
     apiKey,
@@ -15,8 +23,7 @@ async function createClient(apiKey: string): Promise<any> {
 }
 
 export class GeminiRepository {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private clientPromise: Promise<any>;
+  private clientPromise: Promise<GeminiClient>;
 
   constructor(apiKey: string) {
     this.clientPromise = createClient(apiKey);

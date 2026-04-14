@@ -22,18 +22,22 @@ function buildDocsContextBlock(docsContext: DocumentationContext[]): string {
 }
 
 export function buildDiffOverviewPrompt(
-  gitDiff: string,
+  compactedDiff: string,
   docsContext: DocumentationContext[] = [],
+  markdownContext = "",
 ): string {
   const docsBlock = buildDocsContextBlock(docsContext);
+  const markdownBlock = markdownContext.trim()
+    ? markdownContext
+    : "Markdown контекст не был добавлен.";
 
   return `Ты — опытный code reviewer.
 Твоя задача: проанализировать git diff и дать краткий, практический обзор изменений.
 
 Входные данные:
-- Ниже передан git diff (staged changes).
+- Ниже передан компактный пересказ git diff (staged changes).
 - Дополнительно может быть передан контекст актуальной документации из Context7.
-- Анализируй только то, что реально видно в diff.
+- Анализируй только то, что реально видно в компактном diff.
 - Не придумывай факты и не делай предположений без оснований в изменениях.
 - Если есть контекст Context7, учитывай его как источник актуальных API и best practices.
 
@@ -50,9 +54,51 @@ export function buildDiffOverviewPrompt(
 6) Пиши конкретно и по делу: отмечай качество кода, читаемость, риски, поддерживаемость, возможные баги.
 7) Для рекомендаций давай короткие, применимые шаги.
 
-Git diff для анализа:
+Компактный diff для анализа:
+\`\`\`text
+${compactedDiff}
+\`\`\`
+
+Контекст Context7:
+${docsBlock}
+
+Контекст Markdown файлов:
+${markdownBlock}
+`;
+}
+
+export function buildDiffCompactionPrompt(rawDiff: string): string {
+  return buildDiffCompactionPromptWithDocs(rawDiff, []);
+}
+
+export function buildDiffCompactionPromptWithDocs(
+  rawDiff: string,
+  docsContext: DocumentationContext[] = [],
+): string {
+  const docsBlock = buildDocsContextBlock(docsContext);
+
+  return `Ты — помощник по ревью кода.
+Твоя задача: сделать компактное, но точное представление git diff для следующего этапа анализа.
+
+Правила:
+1) Никаких домыслов — только факты из diff.
+2) Сохраняй технические детали, которые важны для ревью: сигнатуры, условия, обработку ошибок, изменения API, потенциальные риски.
+3) Удали шум: длинные неизмененные контексты, повторяющиеся фрагменты, косметические изменения без влияния на поведение.
+4) Группируй результат по файлам.
+5) Формат строго Markdown:
+   ## <file path>
+   - Изменения:
+   - Риски:
+   - Вопросы:
+6) Если по файлу нет рисков или вопросов, укажи:
+   - Нет явных рисков.
+   - Нет открытых вопросов.
+7) Держи ответ компактным и практичным.
+8) Если дан контекст Context7, учитывай его для корректной интерпретации API и best practices, но не добавляй ничего, чего нет в diff.
+
+Исходный git diff:
 \`\`\`diff
-${gitDiff}
+${rawDiff}
 \`\`\`
 
 Контекст Context7:
