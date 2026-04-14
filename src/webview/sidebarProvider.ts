@@ -39,7 +39,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       if (message.command === "proceedReview") {
         const rawDiff =
           typeof message.rawDiff === "string" ? message.rawDiff : "";
-        void this.handleProceedReview(rawDiff);
+        const includeMarkdownFiles = Boolean(message.includeMarkdownFiles);
+        void this.handleProceedReview(rawDiff, includeMarkdownFiles);
         return;
       }
 
@@ -91,7 +92,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     }
   }
 
-  private async handleProceedReview(rawDiff: string): Promise<void> {
+  private async handleProceedReview(
+    rawDiff: string,
+    includeMarkdownFiles: boolean,
+  ): Promise<void> {
     if (!this.view) {
       return;
     }
@@ -106,7 +110,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
             context7Message: string;
           }
         | undefined
-      >("git-commit-assist.generateOverview", rawDiff);
+      >(
+        "git-commit-assist.generateOverview",
+        rawDiff,
+        includeMarkdownFiles,
+      );
 
       if (!this.view) {
         return;

@@ -24,6 +24,7 @@ export interface WebviewMessage {
   configured?: boolean;
   diff?: GitDiffSummary;
   rawDiff?: string;
+  includeMarkdownFiles?: boolean;
   overviewMarkdown?: string;
   overviewHtml?: string;
   context7Used?: boolean;

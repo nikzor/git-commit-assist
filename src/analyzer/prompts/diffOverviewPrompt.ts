@@ -24,8 +24,12 @@ function buildDocsContextBlock(docsContext: DocumentationContext[]): string {
 export function buildDiffOverviewPrompt(
   gitDiff: string,
   docsContext: DocumentationContext[] = [],
+  markdownContext = "",
 ): string {
   const docsBlock = buildDocsContextBlock(docsContext);
+  const markdownBlock = markdownContext.trim()
+    ? markdownContext
+    : "Markdown контекст не был добавлен.";
 
   return `Ты — опытный code reviewer.
 Твоя задача: проанализировать git diff и дать краткий, практический обзор изменений.
@@ -57,5 +61,8 @@ ${gitDiff}
 
 Контекст Context7:
 ${docsBlock}
+
+Контекст Markdown файлов:
+${markdownBlock}
 `;
 }

@@ -1,4 +1,6 @@
 import * as vscode from "vscode";
+import { promises as fs } from "fs";
+import * as path from "path";
 import { GeminiRepository } from "../ai/geminiRepository";
 import { buildDiffOverviewPrompt } from "../analyzer/prompts/diffOverviewPrompt";
 import { fetchDocumentationForReferences } from "../context7/client";
@@ -50,6 +52,7 @@ function extractLibraryReferencesFromRawDiff(
 export async function generateOverviewCommand(
   rawDiff: string,
   secretService: SecretStorageService,
+  includeMarkdownFiles = false,
 ): Promise<
   | {
       markdown: string;
@@ -74,6 +77,10 @@ export async function generateOverviewCommand(
     );
     return undefined;
   }
+
+  const markdownContext = includeMarkdownFiles
+    ? await loadMarkdownContext()
+    : "";
 
   return vscode.window.withProgress(
     {
@@ -105,7 +112,11 @@ export async function generateOverviewCommand(
           context7Message = `Context7 недоступен: ${contextMessage}`;
         }
 
-        const prompt = buildDiffOverviewPrompt(rawDiff, docsContext);
+        const prompt = buildDiffOverviewPrompt(
+          rawDiff,
+          docsContext,
+          markdownContext,
+        );
         const geminiRepository = new GeminiRepository(apiKey);
         const overview = await geminiRepository.sendMessage(prompt);
         const overviewHtml = marked.parse(overview, { async: false }) as string;
@@ -129,4 +140,53 @@ export async function generateOverviewCommand(
       }
     },
   );
+}
+
+const MAX_MARKDOWN_CHARS_PER_FILE = 3500;
+const MAX_MARKDOWN_CHARS_TOTAL = 12000;
+
+async function loadMarkdownContext(): Promise<string> {
+  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+  if (!workspaceFolder) {
+    return "";
+  }
+
+  const markdownUris = await vscode.workspace.findFiles(
+    new vscode.RelativePattern(workspaceFolder, "docs/**/*.md"),
+  );
+  if (markdownUris.length === 0) {
+    return "";
+  }
+
+  const snippets: string[] = [];
+  let totalChars = 0;
+  for (const markdownUri of markdownUris) {
+    try {
+      const content = await fs.readFile(markdownUri.fsPath, "utf-8");
+      const trimmedContent = content.trim();
+      if (!trimmedContent) {
+        continue;
+      }
+
+      if (totalChars >= MAX_MARKDOWN_CHARS_TOTAL) {
+        break;
+      }
+
+      const remainingChars = MAX_MARKDOWN_CHARS_TOTAL - totalChars;
+      const fileChunk = trimmedContent.slice(
+        0,
+        Math.min(MAX_MARKDOWN_CHARS_PER_FILE, remainingChars),
+      );
+      const relativePath = path
+        .relative(workspaceFolder.uri.fsPath, markdownUri.fsPath)
+        .replace(/\\/g, "/");
+
+      snippets.push([`### ${relativePath}`, "```markdown", fileChunk, "```"].join("\n"));
+      totalChars += fileChunk.length;
+    } catch {
+      // File is optional: skip missing or unreadable markdown files.
+    }
+  }
+
+  return snippets.join("\n\n");
 }
